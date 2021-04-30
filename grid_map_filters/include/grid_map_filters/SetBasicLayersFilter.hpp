@@ -8,6 +8,12 @@
 
 #pragma once
 
+<<<<<<< HEAD
+=======
+#include <filters/filter_base.h>
+
+#include <vector>
+>>>>>>> Switch header path from hpp to h
 #include <string>
 #include <vector>
 

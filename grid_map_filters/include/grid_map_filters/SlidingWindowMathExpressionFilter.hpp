@@ -11,8 +11,12 @@
 #include <Eigen/Core>
 #include <string>
 
+<<<<<<< HEAD
 #include <filters/filter_base.hpp>
 #include <grid_map_core/grid_map_core.hpp>
+=======
+#include <filters/filter_base.h>
+>>>>>>> Switch header path from hpp to h
 
 #include "EigenLab/EigenLab.h"
 
