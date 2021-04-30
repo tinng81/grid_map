@@ -8,6 +8,11 @@
 
 #pragma once
 
+<<<<<<< HEAD
+=======
+#include <filters/filter_base.h>
+
+>>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
 
