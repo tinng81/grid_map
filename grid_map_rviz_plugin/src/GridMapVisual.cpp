@@ -158,7 +158,13 @@ void GridMapVisual::computeVisualization(float alpha, bool showGridLines, bool f
         manualObject_->position(position(0), position(1), heightOrFlatData(index(0), index(1)));
 
         const Ogre::ColourValue& color = colorValues(index(0), index(1));
-        manualObject_->colour(color.r, color.g, color.b, alpha);
+        if (color.r == 0.5 && color.g == 0.5 && color.b == 0.5)
+        {
+          manualObject_->colour(color.r, color.g, color.b, 0);
+        }
+        else {
+          manualObject_->colour(color.r, color.g, color.b, alpha);
+        }
 
         indexToOgreIndex(index(0), index(1)) = ogreIndex;
         ogreIndex++;
