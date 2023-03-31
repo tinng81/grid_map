@@ -8,77 +8,83 @@
 
 #include "grid_map_filters/SlidingWindowMathExpressionFilter.hpp"
 
+#include <pluginlib/class_list_macros.h>
+
 using namespace filters;
 
 namespace grid_map {
 
-SlidingWindowMathExpressionFilter::SlidingWindowMathExpressionFilter()
-    : windowSize_(3),
-      useWindowLength_(false),
-      windowLength_(0.0),
-      isComputeEmptyCells_(true),
-      edgeHandling_(SlidingWindowIterator::EdgeHandling::INSIDE) {}
+template<typename T>
+SlidingWindowMathExpressionFilter<T>::SlidingWindowMathExpressionFilter()
+: windowSize_(3),
+  useWindowLength_(false),
+  windowLength_(0.0),
+  isComputeEmptyCells_(true),
+  edgeHandling_(SlidingWindowIterator::EdgeHandling::INSIDE)
+{
+}
 
-SlidingWindowMathExpressionFilter::~SlidingWindowMathExpressionFilter() = default;
+template<typename T>
+SlidingWindowMathExpressionFilter<T>::~SlidingWindowMathExpressionFilter()
+{
+}
 
-bool SlidingWindowMathExpressionFilter::configure() {
-  if (!FilterBase::getParam(std::string("input_layer"), inputLayer_)) {
+template<typename T>
+bool SlidingWindowMathExpressionFilter<T>::configure()
+{
+  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find parameter 'input_layer'.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("output_layer"), outputLayer_)) {
+  if (!FilterBase<T>::getParam(std::string("output_layer"), outputLayer_)) {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find parameter 'output_layer'.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("expression"), expression_)) {
+  if (!FilterBase<T>::getParam(std::string("expression"), expression_)) {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find parameter 'expression'.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("window_size"), windowSize_)) {
-    if (FilterBase::getParam(std::string("window_length"), windowLength_)) {
+  if (!FilterBase<T>::getParam(std::string("window_size"), windowSize_)) {
+    if (FilterBase<T>::getParam(std::string("window_length"), windowLength_)) {
       useWindowLength_ = true;
     }
   }
 
-  if (!FilterBase::getParam(std::string("compute_empty_cells"), isComputeEmptyCells_)) {
+  if (!FilterBase<T>::getParam(std::string("compute_empty_cells"), isComputeEmptyCells_)) {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find parameter 'compute_empty_cells'.");
     return false;
   }
 
   std::string edgeHandlingMethod;
-  if (!FilterBase::getParam(std::string("edge_handling"), edgeHandlingMethod)) {
+  if (!FilterBase<T>::getParam(std::string("edge_handling"), edgeHandlingMethod)) {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find parameter 'edge_handling'.");
     return false;
   }
-  if (edgeHandlingMethod == "inside") {
-    edgeHandling_ = SlidingWindowIterator::EdgeHandling::INSIDE;
-  } else if (edgeHandlingMethod == "crop") {
-    edgeHandling_ = SlidingWindowIterator::EdgeHandling::CROP;
-  } else if (edgeHandlingMethod == "empty") {
-    edgeHandling_ = SlidingWindowIterator::EdgeHandling::EMPTY;
-  } else if (edgeHandlingMethod == "mean") {
-    edgeHandling_ = SlidingWindowIterator::EdgeHandling::MEAN;
-  } else {
+  if (edgeHandlingMethod == "inside") edgeHandling_ = SlidingWindowIterator::EdgeHandling::INSIDE;
+  else if (edgeHandlingMethod == "crop") edgeHandling_ = SlidingWindowIterator::EdgeHandling::CROP;
+  else if (edgeHandlingMethod == "empty") edgeHandling_ = SlidingWindowIterator::EdgeHandling::EMPTY;
+  else if (edgeHandlingMethod == "mean") edgeHandling_ = SlidingWindowIterator::EdgeHandling::MEAN;
+  else {
     ROS_ERROR("SlidingWindowMathExpressionFilter did not find method '%s' for edge handling.", edgeHandlingMethod.c_str());
     return false;
   }
 
-  // TODO(magnus): Can we make caching work with changing shared variable?
-  //  parser_.setCacheExpressions(true);
+  // TODO Can we make caching work with changing shared variable?
+//  parser_.setCacheExpressions(true);
   return true;
 }
 
-bool SlidingWindowMathExpressionFilter::update(const GridMap& mapIn, GridMap& mapOut) {
+template<typename T>
+bool SlidingWindowMathExpressionFilter<T>::update(const T& mapIn, T& mapOut)
+{
   mapOut = mapIn;
   mapOut.add(outputLayer_);
   Matrix& outputData = mapOut[outputLayer_];
   grid_map::SlidingWindowIterator iterator(mapIn, inputLayer_, edgeHandling_, windowSize_);
-  if (useWindowLength_) {
-    iterator.setWindowLength(mapIn, windowLength_);
-  }
+  if (useWindowLength_) iterator.setWindowLength(mapIn, windowLength_);
   for (; !iterator.isPastEnd(); ++iterator) {
     parser_.var(inputLayer_).setLocal(iterator.getData());
     EigenLab::Value<Eigen::MatrixXf> result(parser_.eval(expression_));
@@ -91,4 +97,6 @@ bool SlidingWindowMathExpressionFilter::update(const GridMap& mapIn, GridMap& ma
   return true;
 }
 
-}  // namespace grid_map
+} /* namespace */
+
+PLUGINLIB_EXPORT_CLASS(grid_map::SlidingWindowMathExpressionFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)

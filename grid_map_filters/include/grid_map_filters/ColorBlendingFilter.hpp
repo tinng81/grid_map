@@ -8,23 +8,19 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Blend two color layers.
  */
-class ColorBlendingFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class ColorBlendingFilter : public filters::FilterBase<T>
+{
  public:
   /*!
    * Constructor
@@ -34,22 +30,27 @@ class ColorBlendingFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~ColorBlendingFilter() override;
+  virtual ~ColorBlendingFilter();
 
   /*!
    * Configures the filter.
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Compute a new color layer based on blending two color layers.
    * @param mapIn grid map containing the two color layers.
    * @param mapOut grid map containing mapIn and the blended color layer.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
-  enum class BlendModes { Normal, HardLight, SoftLight };
+
+  enum class BlendModes {
+    Normal,
+    HardLight,
+    SoftLight
+  };
 
   //! Input layers.
   std::string backgroundLayer_, foregroundLayer_;
@@ -64,4 +65,4 @@ class ColorBlendingFilter : public filters::FilterBase<GridMap> {
   std::string outputLayer_;
 };
 
-}  // namespace grid_map
+} /* namespace */

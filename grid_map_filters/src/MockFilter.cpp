@@ -6,28 +6,36 @@
  *   Institute: ETH Zurich, ANYbotics
  */
 
-#include "grid_map_filters/MockFilter.hpp"
-
-#include <chrono>
-#include <thread>
-
 #include <grid_map_core/GridMap.hpp>
+#include <pluginlib/class_list_macros.h>
+#include <thread>
+#include <chrono>
+
+#include "grid_map_filters/MockFilter.hpp"
 
 using namespace filters;
 
 namespace grid_map {
 
-MockFilter::MockFilter() = default;
+template<typename T>
+MockFilter<T>::MockFilter()
+{
+}
 
-MockFilter::~MockFilter() = default;
+template<typename T>
+MockFilter<T>::~MockFilter()
+{
+}
 
-bool MockFilter::configure() {
-  if (!FilterBase::getParam(std::string("processing_time"), processingTime_)) {
+template<typename T>
+bool MockFilter<T>::configure()
+{
+  if (!FilterBase<T>::getParam(std::string("processing_time"), processingTime_)) {
     ROS_ERROR("MockFilter did not find parameter 'processing_time'.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("print_name"), printName_)) {
+  if (!FilterBase<T>::getParam(std::string("print_name"), printName_)) {
     ROS_INFO("MockFilter did not find parameter 'print_name'. Not printing the name. ");
     printName_ = false;
   }
@@ -35,13 +43,17 @@ bool MockFilter::configure() {
   return true;
 }
 
-bool MockFilter::update(const GridMap& mapIn, GridMap& mapOut) {
+template<typename T>
+bool MockFilter<T>::update(const T& mapIn, T& mapOut)
+{
   mapOut = mapIn;
-  if (printName_) {
-    ROS_INFO_STREAM(this->getName() << ": update()");
+  if(printName_){
+    ROS_INFO_STREAM(this->getName()<<": update()");
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(processingTime_));
   return true;
 }
 
-}  // namespace grid_map
+} /* namespace */
+
+PLUGINLIB_EXPORT_CLASS(grid_map::MockFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)

@@ -8,23 +8,20 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Compute a new color layer based on normal vectors layers.
  */
-class NormalColorMapFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class NormalColorMapFilter : public filters::FilterBase<T>
+{
+
  public:
   /*!
    * Constructor
@@ -34,19 +31,19 @@ class NormalColorMapFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~NormalColorMapFilter() override;
+  virtual ~NormalColorMapFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Compute a new color layer based on normal vectors layers.
    * @param mapIn grid map containing the layers of the normal vectors.
    * @param mapOut grid map containing mapIn and the new color layer.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
   //! Input layers prefix.
@@ -56,4 +53,4 @@ class NormalColorMapFilter : public filters::FilterBase<GridMap> {
   std::string outputLayer_;
 };
 
-}  // namespace grid_map
+} /* namespace */

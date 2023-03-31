@@ -70,7 +70,7 @@ map_(gridMap)
     map_.getIndex(top_left, starting_index);
     Index end_index;
     map_.getIndex(bot_right, end_index);
-    Size buffer_size = getSubmapSizeFromCornerIndeces(starting_index, end_index, map_.getSize(), map_.getStartIndex());
+    Size buffer_size = getSubmapSizeFromCornerIndices(starting_index, end_index, map_.getSize(), map_.getStartIndex());
 
     for( SubmapIterator sub_iterator(map_, starting_index, buffer_size); !sub_iterator.isPastEnd();++sub_iterator){
       if (total_checker.check(*sub_iterator)){

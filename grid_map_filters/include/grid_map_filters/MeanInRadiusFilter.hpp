@@ -8,23 +8,19 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
 #include <vector>
->>>>>>> Switch header path from hpp to h
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Filter class to find the mean of the values inside a radius.
  */
-class MeanInRadiusFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class MeanInRadiusFilter : public filters::FilterBase<T> {
+
  public:
   /*!
    * Constructor
@@ -34,12 +30,12 @@ class MeanInRadiusFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~MeanInRadiusFilter() override;
+  virtual ~MeanInRadiusFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Computes for each value in the input layer the mean of all values in a radius around it
@@ -47,7 +43,7 @@ class MeanInRadiusFilter : public filters::FilterBase<GridMap> {
    * @param mapIn grid map containing the input layer.
    * @param mapOut grid map containing the layers of the input map and the new layer.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
   //! Radius to take the mean from.
@@ -60,4 +56,4 @@ class MeanInRadiusFilter : public filters::FilterBase<GridMap> {
   std::string outputLayer_;
 };
 
-}  // namespace grid_map
+} /* namespace */

@@ -8,6 +8,9 @@
 
 #include "grid_map_filters/MedianFillFilter.hpp"
 
+// Wrap as ROS Filter
+#include <pluginlib/class_list_macros.h>
+
 #include <cmath>
 
 // Grid Map
@@ -21,13 +24,15 @@ using namespace filters;
 
 namespace grid_map {
 
-MedianFillFilter::MedianFillFilter()
-    : fillHoleRadius_(0.05), existingValueRadius_(0.0), filterExistingValues_(false), numErodeDilationIterations_(4), debug_(false) {}
+template <typename T>
+MedianFillFilter<T>::MedianFillFilter() : fillHoleRadius_(0.05), filterExistingValues_(false) {}
 
-MedianFillFilter::~MedianFillFilter() = default;
+template <typename T>
+MedianFillFilter<T>::~MedianFillFilter() = default;
 
-bool MedianFillFilter::configure() {
-  if (!FilterBase::getParam(std::string("fill_hole_radius"), fillHoleRadius_)) {
+template <typename T>
+bool MedianFillFilter<T>::configure() {
+  if (!FilterBase<T>::getParam(std::string("fill_hole_radius"), fillHoleRadius_)) {
     ROS_ERROR("Median filter did not find parameter fill_hole_radius.");
     return false;
   }
@@ -39,25 +44,20 @@ bool MedianFillFilter::configure() {
 
   ROS_DEBUG("fill_hole_radius = %f.", fillHoleRadius_);
 
-  if (!FilterBase::getParam(std::string("filter_existing_values"), filterExistingValues_)) {
+  if (!FilterBase<T>::getParam(std::string("filter_existing_values"), filterExistingValues_)) {
     ROS_INFO("Median filter did not find parameter filter_existing_values. Not filtering existing values.");
     filterExistingValues_ = false;
   }
 
   ROS_DEBUG("Filter_existing_values = %s.", filterExistingValues_ ? "true" : "false");
 
-  if (!FilterBase::getParam(std::string("input_layer"), inputLayer_)) {
+  if (!FilterBase<T>::getParam(std::string("input_layer"), inputLayer_)) {
     ROS_ERROR("Median filter did not find parameter `input_layer`.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("num_erode_dilation_iterations"), numErodeDilationIterations_)) {
-    ROS_ERROR("Median filter did not find parameter `num_erode_dilation_iterations`.");
-    return false;
-  }
-
   if (filterExistingValues_) {
-    if (!FilterBase::getParam(std::string("existing_value_radius"), existingValueRadius_)) {
+    if (!FilterBase<T>::getParam(std::string("existing_value_radius"), existingValueRadius_)) {
       ROS_ERROR("Median filter did not find parameter existing_value_radius.");
       return false;
     }
@@ -72,28 +72,28 @@ bool MedianFillFilter::configure() {
 
   ROS_DEBUG("Median input layer is = %s.", inputLayer_.c_str());
 
-  if (!FilterBase::getParam(std::string("output_layer"), outputLayer_)) {
+  if (!FilterBase<T>::getParam(std::string("output_layer"), outputLayer_)) {
     ROS_ERROR("Median filter did not find parameter `output_layer`.");
     return false;
   }
 
   ROS_DEBUG("Median output layer = %s.", outputLayer_.c_str());
 
-  if (!FilterBase::getParam(std::string("fill_mask_layer"), fillMaskLayer_)) {
+  if (!FilterBase<T>::getParam(std::string("fill_mask_layer"), fillMaskLayer_)) {
     ROS_ERROR("Median filter did not find parameter `fill_mask_layer`.");
     return false;
   }
 
   ROS_DEBUG("Median fill mask layer = %s.", fillMaskLayer_.c_str());
 
-  if (!FilterBase::getParam(std::string("debug"), debug_)) {
+  if (!FilterBase<T>::getParam(std::string("debug"), debug_)) {
     ROS_INFO("Median filter did not find parameter debug. Disabling debug output.");
     debug_ = false;
   }
 
   ROS_DEBUG("Debug mode= %s.", debug_ ? "true" : "false");
 
-  if (debug_ && !FilterBase::getParam(std::string("debug_infill_mask_layer"), debugInfillMaskLayer_)) {
+  if (debug_ && !FilterBase<T>::getParam(std::string("debug_infill_mask_layer"), debugInfillMaskLayer_)) {
     ROS_ERROR("Median filter did not find parameter `debug_infill_mask_layer`.");
     return false;
   }
@@ -103,7 +103,8 @@ bool MedianFillFilter::configure() {
   return true;
 }
 
-bool MedianFillFilter::update(const GridMap& mapIn, GridMap& mapOut) {
+template <typename T>
+bool MedianFillFilter<T>::update(const T& mapIn, T& mapOut) {
   // Copy input map and add new layer to it.
   mapOut = mapIn;
   if (!mapOut.exists(outputLayer_)) {
@@ -113,8 +114,8 @@ bool MedianFillFilter::update(const GridMap& mapIn, GridMap& mapOut) {
   mapOut.convertToDefaultStartIndex();
 
   // Avoid hash map lookups afterwards. I.e, get data matrices as references.
-  Matrix inputMap{mapOut[inputLayer_]};  // copy by value to do filtering first.
-  Matrix& outputMap{mapOut[outputLayer_]};
+  grid_map::Matrix inputMap{mapOut[inputLayer_]};  // copy by value to do filtering first.
+  grid_map::Matrix& outputMap{mapOut[outputLayer_]};
 
   // Check if mask is already computed from a previous iteration.
   Eigen::MatrixXf shouldFill;
@@ -126,7 +127,7 @@ bool MedianFillFilter::update(const GridMap& mapIn, GridMap& mapOut) {
 
   const size_t radiusInPixels{static_cast<size_t>(fillHoleRadius_ / mapIn.getResolution())};
   const size_t existingValueRadiusInPixels{static_cast<size_t>(existingValueRadius_ / mapIn.getResolution())};
-  const Index& bufferSize{mapOut.getSize()};
+  const grid_map::Index& bufferSize{mapOut.getSize()};
   unsigned int numNans{0u};
   // Iterate through the entire GridMap and update NaN values with the median.
   for (GridMapIterator iterator(mapOut); !iterator.isPastEnd(); ++iterator) {
@@ -134,10 +135,10 @@ bool MedianFillFilter::update(const GridMap& mapIn, GridMap& mapOut) {
     const auto& inputValue{inputMap(index(0), index(1))};
     const float& shouldFillThisCell{shouldFill(index(0), index(1))};
     auto& outputValue{outputMap(index(0), index(1))};
-    if (!std::isfinite(inputValue) && (shouldFillThisCell != 0.0f)) {  // Fill the NaN input value with the median.
+    if (!std::isfinite(inputValue) && shouldFillThisCell) {  // Fill the NaN input value with the median.
       outputValue = getMedian(inputMap, index, radiusInPixels, bufferSize);
       numNans++;
-    } else if (filterExistingValues_ && (shouldFillThisCell != 0.0f)) {  // Value is already finite. Optionally add some filtering.
+    } else if (filterExistingValues_ && shouldFillThisCell) {  // Value is already finite. Optionally add some filtering.
       outputValue = getMedian(inputMap, index, existingValueRadiusInPixels, bufferSize);
     } else {  // Dont do any filtering, just take the input value.
       outputValue = inputValue;
@@ -150,14 +151,15 @@ bool MedianFillFilter::update(const GridMap& mapIn, GridMap& mapOut) {
   return true;
 }
 
-float MedianFillFilter::getMedian(Eigen::Ref<const Matrix> inputMap, const Index& centerIndex, const size_t radiusInPixels,
-                                  const Size bufferSize) {
+template <typename T>
+float MedianFillFilter<T>::getMedian(Eigen::Ref<const grid_map::Matrix> inputMap, const grid_map::Index& centerIndex,
+                                     const size_t radiusInPixels, const grid_map::Size bufferSize) {
   // Bound the median window to the GridMap boundaries. Calculate the neighbour patch.
-  Index topLeftIndex{centerIndex - Index(radiusInPixels, radiusInPixels)};
-  Index bottomRightIndex{centerIndex + Index(radiusInPixels, radiusInPixels)};
-  boundIndexToRange(topLeftIndex, bufferSize);
-  boundIndexToRange(bottomRightIndex, bufferSize);
-  const Index neighbourPatchSize{bottomRightIndex - topLeftIndex + Index{1, 1}};
+  grid_map::Index topLeftIndex{centerIndex - grid_map::Index(radiusInPixels, radiusInPixels)};
+  grid_map::Index bottomRightIndex{centerIndex + grid_map::Index(radiusInPixels, radiusInPixels)};
+  grid_map::boundIndexToRange(topLeftIndex, bufferSize);
+  grid_map::boundIndexToRange(bottomRightIndex, bufferSize);
+  const grid_map::Index neighbourPatchSize{bottomRightIndex - topLeftIndex + grid_map::Index{1, 1}};
 
   // Extract local neighbourhood.
   const auto& neighbourhood{inputMap.block(topLeftIndex(0), topLeftIndex(1), neighbourPatchSize(0), neighbourPatchSize(1))};
@@ -185,7 +187,8 @@ float MedianFillFilter::getMedian(Eigen::Ref<const Matrix> inputMap, const Index
   }
 }
 
-Eigen::MatrixXf MedianFillFilter::computeAndAddFillMask(const Eigen::MatrixXf& inputMap, GridMap& mapOut) {
+template <typename T>
+Eigen::MatrixXf MedianFillFilter<T>::computeAndAddFillMask(const Eigen::MatrixXf& inputMap, T& mapOut) {
   Eigen::MatrixXf shouldFill;
   // Precompute mask of valid height values
   using MaskMatrix = Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>;
@@ -195,7 +198,7 @@ Eigen::MatrixXf MedianFillFilter::computeAndAddFillMask(const Eigen::MatrixXf& i
   cv::Mat isValidCV;
   cv::eigen2cv(isValid, isValidCV);
   cv::Mat_<bool> isValidOutlierRemoved{cleanedMask(isValidCV)};
-  cv::Mat shouldFillCV{fillHoles(isValidOutlierRemoved, numErodeDilationIterations_)};
+  cv::Mat shouldFillCV{fillHoles(isValidOutlierRemoved, 4)};
 
   // Outlier removed mask to eigen.
   if (debug_) {
@@ -209,10 +212,11 @@ Eigen::MatrixXf MedianFillFilter::computeAndAddFillMask(const Eigen::MatrixXf& i
   return shouldFill;
 }
 
-cv::Mat_<bool> MedianFillFilter::cleanedMask(const cv::Mat_<bool>& inputMask) {
+template <typename T>
+cv::Mat_<bool> MedianFillFilter<T>::cleanedMask(const cv::Mat_<bool>& inputMask) {
   auto element{cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1))};
 
-  cv::Mat_<bool> cleanedInputMask(inputMask.size(), false);
+  cv::Mat_<bool> cleanedInputMask(inputMask.size(), inputMask.type());
 
   // Erode then dilate to remove sparse points
   cv::dilate(inputMask, cleanedInputMask, element);
@@ -223,9 +227,10 @@ cv::Mat_<bool> MedianFillFilter::cleanedMask(const cv::Mat_<bool>& inputMask) {
   return cleanedInputMask;
 }
 
-cv::Mat_<bool> MedianFillFilter::fillHoles(const cv::Mat_<bool>& isValidMask, const size_t numDilationClosingIterations) {
+template <typename T>
+cv::Mat_<bool> MedianFillFilter<T>::fillHoles(const cv::Mat_<bool>& isValidMask, const size_t numDilationClosingIterations) {
   auto element{cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1))};
-  cv::Mat_<bool> holesFilledMask(isValidMask.size(), false);
+  cv::Mat_<bool> holesFilledMask(isValidMask.size(), isValidMask.type());
   // Remove holes in the mask by morphological closing.
   cv::dilate(isValidMask, holesFilledMask, element);
   for (size_t iteration = 1; iteration < numDilationClosingIterations; iteration++) {
@@ -238,10 +243,16 @@ cv::Mat_<bool> MedianFillFilter::fillHoles(const cv::Mat_<bool>& isValidMask, co
   return holesFilledMask;
 }
 
-void MedianFillFilter::addCvMatAsLayer(GridMap& gridMap, const cv::Mat& cvLayer, const std::string& layerName) {
+template <typename T>
+void MedianFillFilter<T>::addCvMatAsLayer(T& gridMap, const cv::Mat& cvLayer, const std::string& layerName) {
   Eigen::MatrixXf tmpEigenMatrix;
   cv::cv2eigen(cvLayer, tmpEigenMatrix);
   gridMap.add(layerName, tmpEigenMatrix);
 }
 
 }  // namespace grid_map
+
+// Explicitly define the specialization for GridMap to have the filter implementation available for testing.
+template class grid_map::MedianFillFilter<grid_map::GridMap>;
+// Export the filter.
+PLUGINLIB_EXPORT_CLASS(grid_map::MedianFillFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)

@@ -8,22 +8,18 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Filter class to compute the minimal value inside a radius.
  */
-class MinInRadiusFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class MinInRadiusFilter : public filters::FilterBase<T> {
+
  public:
   /*!
    * Constructor.
@@ -33,12 +29,12 @@ class MinInRadiusFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~MinInRadiusFilter() override;
+  virtual ~MinInRadiusFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Computes for each value in the input layer the minimum of all values in a radius around it.
@@ -46,7 +42,7 @@ class MinInRadiusFilter : public filters::FilterBase<GridMap> {
    * @param mapIn grid map containing the input layer.
    * @param mapOut grid map containing the original layers and the new layer with the minimal values.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
   //! Radius to take the minimum in.
@@ -59,4 +55,4 @@ class MinInRadiusFilter : public filters::FilterBase<GridMap> {
   std::string outputLayer_;
 };
 
-}  // namespace grid_map
+} /* namespace */

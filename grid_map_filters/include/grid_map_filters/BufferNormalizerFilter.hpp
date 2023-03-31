@@ -8,22 +8,19 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Normalizes the buffer of a map such that it has default (zero) start index.
  */
-class BufferNormalizerFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class BufferNormalizerFilter : public filters::FilterBase<T>
+{
+
  public:
   /*!
    * Constructor
@@ -33,19 +30,19 @@ class BufferNormalizerFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~BufferNormalizerFilter() override;
+  virtual ~BufferNormalizerFilter();
 
   /*!
    * Configures the filter from parameters on the parameter server.
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Normalizes the buffer of a map.
    * @param mapIn the input map before normalization.
    * @param mapOut the normalized map.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 };
 
-}  // namespace grid_map
+} /* namespace */

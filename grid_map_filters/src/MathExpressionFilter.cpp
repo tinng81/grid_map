@@ -9,32 +9,43 @@
 #include "grid_map_filters/MathExpressionFilter.hpp"
 
 #include <grid_map_core/grid_map_core.hpp>
+#include <pluginlib/class_list_macros.h>
 
 using namespace filters;
 
 namespace grid_map {
 
-MathExpressionFilter::MathExpressionFilter() = default;
+template<typename T>
+MathExpressionFilter<T>::MathExpressionFilter()
+{
+}
 
-MathExpressionFilter::~MathExpressionFilter() = default;
+template<typename T>
+MathExpressionFilter<T>::~MathExpressionFilter()
+{
+}
 
-bool MathExpressionFilter::configure() {
-  if (!FilterBase::getParam(std::string("expression"), expression_)) {
+template<typename T>
+bool MathExpressionFilter<T>::configure()
+{
+  if (!FilterBase<T>::getParam(std::string("expression"), expression_)) {
     ROS_ERROR("MathExpressionFilter did not find parameter 'expression'.");
     return false;
   }
 
-  if (!FilterBase::getParam(std::string("output_layer"), outputLayer_)) {
+  if (!FilterBase<T>::getParam(std::string("output_layer"), outputLayer_)) {
     ROS_ERROR("MathExpressionFilter did not find parameter 'output_layer'.");
     return false;
   }
 
   // TODO Can we make caching work with changing shared variable?
-  //  parser_.setCacheExpressions(true);
+//  parser_.setCacheExpressions(true);
   return true;
 }
 
-bool MathExpressionFilter::update(const GridMap& mapIn, GridMap& mapOut) {
+template<typename T>
+bool MathExpressionFilter<T>::update(const T& mapIn, T& mapOut)
+{
   mapOut = mapIn;
   for (const auto& layer : mapOut.getLayers()) {
     parser_.var(layer).setShared(mapOut[layer]);
@@ -44,4 +55,6 @@ bool MathExpressionFilter::update(const GridMap& mapIn, GridMap& mapOut) {
   return true;
 }
 
-}  // namespace grid_map
+} /* namespace */
+
+PLUGINLIB_EXPORT_CLASS(grid_map::MathExpressionFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)

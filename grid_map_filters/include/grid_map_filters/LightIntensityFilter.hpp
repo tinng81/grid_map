@@ -8,23 +8,20 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
 /*!
  * Compute the diffuse lighting of a surface as new black and white color layer.
  */
-class LightIntensityFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class LightIntensityFilter : public filters::FilterBase<T>
+{
+
  public:
   /*!
    * Constructor
@@ -34,19 +31,19 @@ class LightIntensityFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~LightIntensityFilter() override;
+  virtual ~LightIntensityFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Compute the diffuse lighting layer.
    * @param mapIn grid map containing the layers of the normal vectors.
    * @param mapOut grid map containing mapIn and the black and white lighting color layer.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
   //! Input layers prefix.
@@ -59,4 +56,4 @@ class LightIntensityFilter : public filters::FilterBase<GridMap> {
   Eigen::Vector3f lightDirection_;
 };
 
-}  // namespace grid_map
+} /* namespace */

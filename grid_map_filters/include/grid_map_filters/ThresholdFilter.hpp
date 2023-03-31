@@ -8,16 +8,10 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <string>
 #include <vector>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
 
@@ -25,7 +19,10 @@ namespace grid_map {
  * Threshold filter class to set values below/above a threshold to a
  * specified value.
  */
-class ThresholdFilter : public filters::FilterBase<GridMap> {
+template<typename T>
+class ThresholdFilter : public filters::FilterBase<T>
+{
+
  public:
   /*!
    * Constructor
@@ -48,9 +45,10 @@ class ThresholdFilter : public filters::FilterBase<GridMap> {
    * @param mapIn GridMap with the different layers to apply a threshold.
    * @param mapOut GridMap with the threshold applied to the layers.
    */
-  virtual bool update(const GridMap& mapIn, GridMap& mapOut);
+  virtual bool update(const T& mapIn, T& mapOut);
 
  private:
+
   //! Layer the threshold will be evaluated.
   std::string conditionLayer_;
 
@@ -70,4 +68,4 @@ class ThresholdFilter : public filters::FilterBase<GridMap> {
   double setTo_;
 };
 
-}  // namespace grid_map
+} /* namespace */

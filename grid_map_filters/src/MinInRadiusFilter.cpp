@@ -8,19 +8,28 @@
 
 #include "grid_map_filters/MinInRadiusFilter.hpp"
 
-#include <math.h>
 #include <grid_map_core/grid_map_core.hpp>
+#include <pluginlib/class_list_macros.h>
 
 using namespace filters;
 
 namespace grid_map {
 
-MinInRadiusFilter::MinInRadiusFilter() : radius_(0.0) {}
+template<typename T>
+MinInRadiusFilter<T>::MinInRadiusFilter()
+    : radius_(0.0)
+{
+}
 
-MinInRadiusFilter::~MinInRadiusFilter() = default;
+template<typename T>
+MinInRadiusFilter<T>::~MinInRadiusFilter()
+{
+}
 
-bool MinInRadiusFilter::configure() {
-  if (!FilterBase::getParam(std::string("radius"), radius_)) {
+template<typename T>
+bool MinInRadiusFilter<T>::configure()
+{
+  if (!FilterBase < T > ::getParam(std::string("radius"), radius_)) {
     ROS_ERROR("MinInRadius filter did not find parameter `radius`.");
     return false;
   }
@@ -31,14 +40,14 @@ bool MinInRadiusFilter::configure() {
   }
   ROS_DEBUG("Radius = %f.", radius_);
 
-  if (!FilterBase::getParam(std::string("input_layer"), inputLayer_)) {
+  if (!FilterBase < T > ::getParam(std::string("input_layer"), inputLayer_)) {
     ROS_ERROR("MinInRadius filter did not find parameter `input_layer`.");
     return false;
   }
 
   ROS_DEBUG("MinInRadius input layer is = %s.", inputLayer_.c_str());
 
-  if (!FilterBase::getParam(std::string("output_layer"), outputLayer_)) {
+  if (!FilterBase < T > ::getParam(std::string("output_layer"), outputLayer_)) {
     ROS_ERROR("Step filter did not find parameter `output_layer`.");
     return false;
   }
@@ -47,18 +56,19 @@ bool MinInRadiusFilter::configure() {
   return true;
 }
 
-bool MinInRadiusFilter::update(const GridMap& mapIn, GridMap& mapOut) {
+template<typename T>
+bool MinInRadiusFilter<T>::update(const T& mapIn, T& mapOut)
+{
   // Add new layer to the elevation map.
   mapOut = mapIn;
   mapOut.add(outputLayer_);
 
-  double value{NAN};
+  double value;
 
   // First iteration through the elevation map.
   for (grid_map::GridMapIterator iterator(mapOut); !iterator.isPastEnd(); ++iterator) {
-    if (!mapOut.isValid(*iterator, inputLayer_)) {
+    if (!mapOut.isValid(*iterator, inputLayer_))
       continue;
-    }
     value = mapOut.at(inputLayer_, *iterator);
     double valueMin = 0.0;
 
@@ -68,10 +78,10 @@ bool MinInRadiusFilter::update(const GridMap& mapIn, GridMap& mapOut) {
 
     // Get minimal value in the circular window.
     bool init = false;
-    for (grid_map::CircleIterator submapIterator(mapOut, center, radius_); !submapIterator.isPastEnd(); ++submapIterator) {
-      if (!mapOut.isValid(*submapIterator, inputLayer_)) {
+    for (grid_map::CircleIterator submapIterator(mapOut, center, radius_); !submapIterator.isPastEnd();
+        ++submapIterator) {
+      if (!mapOut.isValid(*submapIterator, inputLayer_))
         continue;
-      }
       value = mapOut.at(inputLayer_, *submapIterator);
 
       if (!init) {
@@ -79,17 +89,17 @@ bool MinInRadiusFilter::update(const GridMap& mapIn, GridMap& mapOut) {
         init = true;
         continue;
       }
-      if (value < valueMin) {
+      if (value < valueMin)
         valueMin = value;
-      }
     }
 
-    if (init) {
+    if (init)
       mapOut.at(outputLayer_, *iterator) = valueMin;
-    }
   }
 
   return true;
 }
 
-}  // namespace grid_map
+} /* namespace */
+
+PLUGINLIB_EXPORT_CLASS(grid_map::MinInRadiusFilter<grid_map::GridMap>, filters::FilterBase<grid_map::GridMap>)

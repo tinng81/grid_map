@@ -8,16 +8,11 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
 
-#include <filters/filter_base.hpp>
-#include <grid_map_core/GridMap.hpp>
 #include <grid_map_core/TypeDefs.hpp>
 #include <opencv2/core.hpp>
 
@@ -27,7 +22,8 @@ namespace grid_map {
  * Uses std::nth_element to fill holes in the input layer by the median of the surrounding values. The result is put into the output_layer.
  * Note: Only values for which the fill_layer is true will be filled. The fill_layer is auto computed if not present in the input.
  */
-class MedianFillFilter : public filters::FilterBase<GridMap> {
+template <typename T>
+class MedianFillFilter : public filters::FilterBase<T> {
  public:
   /*!
    * Constructor
@@ -37,12 +33,12 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
   /*!
    * Destructor.
    */
-  ~MedianFillFilter() override;
+  virtual ~MedianFillFilter();
 
   /*!
    * Configures the filter from parameters on the Parameter Server
    */
-  bool configure() override;
+  virtual bool configure();
 
   /*!
    * Adds a new output layer to the map.
@@ -51,7 +47,7 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param mapIn grid map containing input layer
    * @param mapOut grid map containing mapIn and median filtered input layer.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  virtual bool update(const T& mapIn, T& mapOut);
 
  protected:
   /*!
@@ -64,7 +60,8 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param bufferSize The buffer size of the input
    * @return The median of finites in the specified neighbourhood.
    */
-  static float getMedian(Eigen::Ref<const Matrix> inputMap, const Index& centerIndex, size_t radiusInPixels, Size bufferSize);
+  float getMedian(Eigen::Ref<const grid_map::Matrix> inputMap, const grid_map::Index& centerIndex, const size_t radiusInPixels,
+                  const grid_map::Size bufferSize);
 
   /**
    * Computes a mask of which cells to fill-in based on the validity of input cells. I.e small holes between (and including) valid cells are
@@ -76,7 +73,7 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param mapOut The output GridMap will contain the additional fill_mask layer afterwards.
    * @return An eigen mask indicating which cells should be filled by the median filter.
    */
-  Eigen::MatrixXf computeAndAddFillMask(const Eigen::MatrixXf& inputMap, GridMap& mapOut);
+  Eigen::MatrixXf computeAndAddFillMask(const Eigen::MatrixXf& inputMap, T& mapOut);
 
   /**
    * Remove sparse valid regions by morphological opening.
@@ -85,7 +82,7 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param inputMask Initial mask possibly containing also sparse valid regions that will be removed.
    * @return An opencv mask of the same size as input mask with small sparse valid regions removed.
    */
-  static cv::Mat_<bool> cleanedMask(const cv::Mat_<bool>& inputMask);
+  cv::Mat_<bool> cleanedMask(const cv::Mat_<bool>& inputMask);
 
   /**
    * Performs morphological closing on a boolean cv matrix mask.
@@ -93,7 +90,7 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param [in] numDilationClosingIterations Algorithm specific parameter. Higher means that bigger holes will still be filled.
    * @return A mask of the same size as isValidMask but with small holes filled.
    */
-  static cv::Mat_<bool> fillHoles(const cv::Mat_<bool>& isValidMask, size_t numDilationClosingIterations);
+  cv::Mat_<bool> fillHoles(const cv::Mat_<bool>& isValidMask, const size_t numDilationClosingIterations);
 
   /**
    * Adds a float cv matrix as layer to a given map.
@@ -101,7 +98,7 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
    * @param [in] cvLayer The cv matrix to add.
    * @param [in] layerName The layer name
    */
-  static void addCvMatAsLayer(GridMap& gridMap, const cv::Mat& cvLayer, const std::string& layerName);
+  void addCvMatAsLayer(T& gridMap, const cv::Mat& cvLayer, const std::string& layerName);
 
  private:
   //! Median filtering radius of NaN values in the input.
@@ -112,9 +109,6 @@ class MedianFillFilter : public filters::FilterBase<GridMap> {
 
   //! Flag indicating whether to also filter finite values.
   bool filterExistingValues_;
-
-  //! Number of erode-dilate iterations to calculate mask. Higher means that bigger holes will still be filled.
-  int numErodeDilationIterations_;
 
   //! Input layer name.
   std::string inputLayer_;

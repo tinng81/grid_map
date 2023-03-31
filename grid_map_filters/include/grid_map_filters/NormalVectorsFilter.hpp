@@ -8,24 +8,19 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 #include <grid_map_core/grid_map_core.hpp>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
-
-#include <filters/filter_base.hpp>
-#include <grid_map_core/grid_map_core.hpp>
 
 namespace grid_map {
 
 /*!
  * Compute the normal vectors of a layer in a map.
  */
-class NormalVectorsFilter : public filters::FilterBase<GridMap> {
+template <typename T>
+class NormalVectorsFilter : public filters::FilterBase<T> {
  public:
   /*!
    * Constructor
@@ -61,7 +56,7 @@ class NormalVectorsFilter : public filters::FilterBase<GridMap> {
    * @param mapIn grid map containing the layer for which the normal vectors are computed for.
    * @param mapOut grid map containing mapIn and the new layers for the normal vectors.
    */
-  bool update(const GridMap& mapIn, GridMap& mapOut) override;
+  bool update(const T& mapIn, T& mapOut) override;
 
  private:
   /*!
@@ -111,7 +106,7 @@ class NormalVectorsFilter : public filters::FilterBase<GridMap> {
    * @param index: Index of point in the grid map for which this function calculates the normal vector.
    */
   void areaSingleNormalComputation(GridMap& map, const std::string& inputLayer, const std::string& outputLayersPrefix,
-                                   const grid_map::Index& index);
+                                          const grid_map::Index& index);
   /*!
    * Estimate the normal vector at each point of the input layer by using the rasterSingleNormalComputation function.
    * This function makes use of the raster method and is the serial version of such normal vector computation using a
@@ -165,7 +160,7 @@ class NormalVectorsFilter : public filters::FilterBase<GridMap> {
    * @param index: Index of point in the grid map for which this function calculates the normal vector.
    */
   void rasterSingleNormalComputation(GridMap& map, const std::string& outputLayersPrefix, const grid_map::Matrix& dataMap,
-                                     const grid_map::Index& index);
+                                            const grid_map::Index& index);
 
   enum class Method { AreaSerial, AreaParallel, RasterSerial, RasterParallel };
 
