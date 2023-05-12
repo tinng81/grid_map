@@ -8,15 +8,12 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <Eigen/Core>
 #include <string>
 
-#include <filters/filter_base.hpp>
+#include <filters/filter_base.h>
 #include <grid_map_core/GridMap.hpp>
 #include <grid_map_core/TypeDefs.hpp>
 #include <opencv2/core.hpp>

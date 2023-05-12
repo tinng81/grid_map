@@ -32,7 +32,7 @@ find_package(catkin REQUIRED
   ${CATKIN_PACKAGE_DEPENDENCIES}
 )
 
-find_package(TBB 2020.1 EXACT REQUIRED)
+# find_package(TBB REQUIRED)
 
 find_package(OpenCV REQUIRED)
 

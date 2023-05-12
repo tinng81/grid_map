@@ -8,14 +8,10 @@
 
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include <filters/filter_base.h>
 
->>>>>>> Switch header path from hpp to h
 #include <string>
 
-#include <filters/filter_base.hpp>
 #include <grid_map_core/GridMap.hpp>
 
 namespace grid_map {
