@@ -5,4 +5,10 @@
     <description>Displays grid_map_msgs/GridMap messages.</description>
     <message_type>grid_map_msgs/GridMap</message_type>
   </class>
+  <class name="grid_map_rviz_plugin/OccupancyGrid"
+         type="grid_map_rviz_plugin::OccupancyGridDisplay"
+         base_class_type="rviz::Display">
+    <description>Displays nav_msgs/OccupancyGrid with a configurable colormap.</description>
+    <message_type>nav_msgs/OccupancyGrid</message_type>
+  </class>
 </library>

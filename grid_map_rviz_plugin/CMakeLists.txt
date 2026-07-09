@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
     rviz
     grid_map_ros
     grid_map_msgs
+    nav_msgs
 )
 
 catkin_package(
@@ -21,6 +22,7 @@ catkin_package(
     rviz
     grid_map_ros
     grid_map_msgs
+    nav_msgs
 )
 
 include_directories(
@@ -36,6 +38,7 @@ set(CMAKE_AUTOMOC ON)
 
 set(INCLUDE_FILES_QT
   include/grid_map_rviz_plugin/GridMapDisplay.hpp
+  include/grid_map_rviz_plugin/OccupancyGridDisplay.hpp
   include/grid_map_rviz_plugin/modified/message_filter_display.h
   include/grid_map_rviz_plugin/modified/frame_manager.h
 )
@@ -68,6 +71,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 set(SOURCE_FILES
   src/GridMapDisplay.cpp
   src/GridMapVisual.cpp
+  src/OccupancyGridDisplay.cpp
+  src/OccupancyGridVisual.cpp
 )
 
 ## An rviz plugin is just a shared library, so here we declare the
